@@ -8,7 +8,7 @@
 .set MAGIC,    0x1BADB002
 .set CHECKSUM, -(MAGIC + FLAGS)
 
-.section .multiboot
+.section .multiboot, "a", @progbits    # "a": allocatable, so it is really loaded
 .align 4
 .long MAGIC
 .long FLAGS

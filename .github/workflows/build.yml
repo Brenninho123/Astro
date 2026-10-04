@@ -3,7 +3,6 @@ name: Build
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -25,6 +24,12 @@ jobs:
 
       - name: Build kernel
         run: make CROSS= kernel
+
+      - name: Show kernel layout
+        run: |
+          readelf -hlS build/astro.elf
+          echo "Multiboot magic (02 b0 ad 1b) must appear in the first 8192 bytes:"
+          od -A d -t x1 -N 8192 -v build/astro.elf | grep -n "02 b0 ad 1b" || echo "not found at a line start"
 
       - name: Verify Multiboot header
         run: grub-file --is-x86-multiboot build/astro.elf
@@ -65,24 +70,3 @@ jobs:
           name: astro-sim-windows
           path: build/sim/astro-sim.exe
           if-no-files-found: error
-
-  # Publishes both artifacts as a GitHub release when a version tag (v*) is pushed.
-  release:
-    name: Release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [kernel, simulator]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
-
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist/astro-sim.exe
-            dist/astro.elf
-          generate_release_notes: true

@@ -26,4 +26,13 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
+
+    /* Toolchain metadata we do not need; keeps the layout predictable. */
+    /DISCARD/ :
+    {
+        *(.note.gnu.property)
+        *(.note.gnu.build-id)
+        *(.eh_frame)
+        *(.comment)
+    }
 }

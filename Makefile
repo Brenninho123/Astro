@@ -35,8 +35,9 @@ ISO    := $(BUILD)/astro.iso
 
 CFLAGS  := $(ARCH_FLAGS) -std=gnu11 -O2 -Wall -Wextra $(INCLUDES) -Isrc/arch/x86 \
            -ffreestanding -fno-stack-protector -fno-pic -fno-pie \
-           -fno-asynchronous-unwind-tables
-LDFLAGS := $(ARCH_FLAGS) -T linker.ld -nostdlib -static -no-pie -Wl,-z,noexecstack
+           -fno-asynchronous-unwind-tables -fcf-protection=none
+LDFLAGS := $(ARCH_FLAGS) -T linker.ld -nostdlib -static -no-pie \
+           -Wl,-z,noexecstack -Wl,--build-id=none
 
 X86_C_SRCS := $(wildcard src/kernel/*.c) $(wildcard src/arch/x86/*.c) $(wildcard src/apps/*.c)
 X86_S_SRCS := $(wildcard src/boot/*.S)

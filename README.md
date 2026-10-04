@@ -19,8 +19,6 @@ Every push builds both targets on GitHub Actions. Open the **Actions** tab, pick
 - `astro-sim-windows` - the simulator (`astro-sim.exe`), just double-click it
 - `astro-kernel` - the bare-metal kernel (`astro.elf`) for QEMU
 
-Tagged versions (`v*`) are published under **Releases**.
-
 ## Features
 
 - Multiboot boot (GRUB or `qemu -kernel`)
