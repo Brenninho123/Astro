@@ -1,7 +1,9 @@
 # Astro OS - build
 #
 #   make kernel   bare-metal x86 kernel  -> build/astro.elf
-#   make sim      Windows simulator      -> build/sim/astro-sim.exe
+#   make sim      Windows simulator (GUI) -> build/sim/astro-sim.exe
+#   make preview  render home-screen frames to build/preview/shots
+#   make android  Android app             -> build/astro.apk (needs the Android SDK + NDK)
 #   make run      run the kernel in QEMU
 #   make iso      bootable ISO (needs grub-mkrescue and xorriso)
 #
@@ -14,7 +16,7 @@
 BUILD    := build
 INCLUDES := -Isrc/kernel -Isrc/apps
 
-.PHONY: all kernel sim run iso run-iso clean
+.PHONY: all kernel sim preview android run iso run-iso clean
 
 all: kernel
 
@@ -72,7 +74,7 @@ run-iso: iso
 	qemu-system-i386 -cdrom $(ISO)
 
 # ---------------------------------------------------------------------------
-# Windows simulator (runs Astro as a normal program inside Windows)
+# Windows simulator (the graphical home screen in a normal Win32 window)
 # ---------------------------------------------------------------------------
 
 SIM_CC      ?= gcc
@@ -81,18 +83,19 @@ SIM_WINDRES ?= windres
 SIM_EXE := $(BUILD)/sim/astro-sim.exe
 SIM_RES := $(BUILD)/sim/astro_rc.o
 
-SIM_CFLAGS  := -std=gnu11 -O2 -Wall -Wextra -DASTRO_HOSTED $(INCLUDES) -Isrc/sim
-SIM_LDFLAGS := -static -mconsole
+SIM_CFLAGS  := -std=gnu11 -O2 -Wall -Wextra -DASTRO_HOSTED -Isrc/kernel -Isrc/desktop -Isrc/sim
+SIM_LDFLAGS := -static -mwindows
+SIM_LIBS    := -lm
 
 # kstring.c is the freestanding libc replacement: the simulator uses the real C runtime.
 SIM_C_SRCS := $(filter-out src/kernel/kstring.c,$(wildcard src/kernel/*.c)) \
-              $(wildcard src/apps/*.c) $(wildcard src/sim/*.c)
+              $(wildcard src/desktop/*.c) $(wildcard src/sim/*.c)
 SIM_OBJS   := $(patsubst src/%.c,$(BUILD)/sim/%.o,$(SIM_C_SRCS))
 
 sim: $(SIM_EXE)
 
 $(SIM_EXE): $(SIM_OBJS) $(SIM_RES)
-	$(SIM_CC) $(SIM_LDFLAGS) -o $@ $(SIM_OBJS) $(SIM_RES)
+	$(SIM_CC) $(SIM_LDFLAGS) -o $@ $(SIM_OBJS) $(SIM_RES) $(SIM_LIBS)
 
 $(SIM_OBJS): $(BUILD)/sim/%.o: src/%.c
 	@mkdir -p $(dir $@)
@@ -102,6 +105,24 @@ $(SIM_OBJS): $(BUILD)/sim/%.o: src/%.c
 $(SIM_RES): src/sim/astro.rc assets/astro.ico
 	@mkdir -p $(dir $@)
 	$(SIM_WINDRES) -I. -O coff $< -o $@
+
+# Renders frames of the home screen (desktop and phone layouts) to build/preview/shots.
+PREVIEW_SRCS := tools/preview.c src/desktop/desktop.c src/desktop/gfx.c \
+                src/kernel/kprintf.c src/kernel/shell.c src/kernel/vga.c src/kernel/bootlog.c
+
+preview:
+	@mkdir -p $(BUILD)/preview/shots/desktop $(BUILD)/preview/shots/phone
+	$(SIM_CC) -std=gnu11 -O2 -Wall -Wextra -DASTRO_HOSTED -Isrc/kernel -Isrc/desktop \
+	    $(PREVIEW_SRCS) -lm -o $(BUILD)/preview/preview
+	$(BUILD)/preview/preview $(BUILD)/preview/shots/desktop 1024 640
+	$(BUILD)/preview/preview $(BUILD)/preview/shots/phone 720 1500 touch
+
+# ---------------------------------------------------------------------------
+# Android app (see android/build-apk.sh)
+# ---------------------------------------------------------------------------
+
+android:
+	bash android/build-apk.sh
 
 # ---------------------------------------------------------------------------
 

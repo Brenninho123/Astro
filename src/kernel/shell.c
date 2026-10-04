@@ -1,5 +1,4 @@
 #include "shell.h"
-#include "keyboard.h"
 #include "kprintf.h"
 #include "kstring.h"
 #include "power.h"
@@ -58,12 +57,14 @@ static bool cmd_reboot(const char *args)
 {
     (void)args;
     power_reboot();
+    return false;
 }
 
 static bool cmd_shutdown(const char *args)
 {
     (void)args;
     power_shutdown();
+    return false;
 }
 
 static bool cmd_exit(const char *args)
@@ -131,40 +132,37 @@ static bool execute(char *line)
     return false;
 }
 
-void shell_run(void)
-{
-    char line[SHELL_LINE_MAX];
+static char line[SHELL_LINE_MAX];
+static size_t line_len;
 
+void shell_start(void)
+{
     vga_set_color(VGA_LIGHT_GREY, VGA_BLACK);
     vga_clear();
     vga_cursor_enable(true);
     kprintf("%s OS %s terminal - type 'help' to list the commands.\n\n",
             ASTRO_NAME, ASTRO_VERSION);
+    line_len = 0;
+    prompt();
+}
 
-    for (;;) {
-        size_t len = 0;
-        prompt();
-
-        for (;;) {
-            int key = keyboard_getkey();
-
-            if (key == '\n') {
-                vga_putc('\n');
-                break;
-            }
-            if (key == '\b') {
-                if (len > 0) {
-                    len--;
-                    vga_putc('\b');
-                }
-            } else if (key >= ' ' && key < 0x7F && len < SHELL_LINE_MAX - 1) {
-                line[len++] = (char)key;
-                vga_putc((char)key);
-            }
-        }
-
-        line[len] = '\0';
+bool shell_key(int key)
+{
+    if (key == '\n') {
+        vga_putc('\n');
+        line[line_len] = '\0';
+        line_len = 0;
         if (execute(line))
-            return;
+            return true;
+        prompt();
+    } else if (key == '\b') {
+        if (line_len > 0) {
+            line_len--;
+            vga_putc('\b');
+        }
+    } else if (key >= ' ' && key < 0x7F && line_len < SHELL_LINE_MAX - 1) {
+        line[line_len++] = (char)key;
+        vga_putc((char)key);
     }
+    return false;
 }

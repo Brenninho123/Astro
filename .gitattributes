@@ -10,3 +10,5 @@ Makefile text eol=lf
 *.rc text eol=lf
 *.yml text eol=lf
 *.ico binary
+*.sh text eol=lf
+*.xml text eol=lf

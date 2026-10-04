@@ -35,7 +35,9 @@ static void wait_any_key(void)
 
 static void app_terminal(void)
 {
-    shell_run();
+    shell_start();
+    while (!shell_key(keyboard_getkey()))
+        ;
 }
 
 static void app_sysinfo(void)
