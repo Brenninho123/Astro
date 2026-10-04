@@ -1,2 +1,12 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Fontes do SO sempre com LF (o build roda em Linux/WSL)
+*.c text eol=lf
+*.h text eol=lf
+*.S text eol=lf
+*.ld text eol=lf
+Makefile text eol=lf
+*.rc text eol=lf
+*.yml text eol=lf
+*.ico binary

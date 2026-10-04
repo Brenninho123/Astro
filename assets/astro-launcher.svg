@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="t">
+  <title id="t">Astro Launcher</title>
+  <defs>
+    <radialGradient id="space" cx="30%" cy="25%" r="95%">
+      <stop offset="0" stop-color="#2a1b5e"/>
+      <stop offset="0.55" stop-color="#120a33"/>
+      <stop offset="1" stop-color="#05030f"/>
+    </radialGradient>
+    <radialGradient id="planet" cx="35%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#ff9bf0"/>
+      <stop offset="0.45" stop-color="#c43fd8"/>
+      <stop offset="1" stop-color="#3a1b9a"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffb347"/>
+      <stop offset="1" stop-color="#fff2a8"/>
+    </linearGradient>
+    <clipPath id="tile"><rect width="512" height="512" rx="112"/></clipPath>
+    <!-- metade de baixo do anel passa na frente do planeta -->
+    <clipPath id="front"><rect x="0" y="256" width="512" height="256"/></clipPath>
+    <!-- estrela de 4 pontas -->
+    <path id="star" d="M0 -1 Q0.12 -0.12 1 0 Q0.12 0.12 0 1 Q-0.12 0.12 -1 0 Q-0.12 -0.12 0 -1Z"/>
+  </defs>
+
+  <g clip-path="url(#tile)">
+    <rect width="512" height="512" fill="url(#space)"/>
+
+    <!-- estrelas -->
+    <use href="#star" transform="translate(96 104) scale(26)" fill="#ffffff"/>
+    <use href="#star" transform="translate(420 92) scale(14)" fill="#bff6ff"/>
+    <use href="#star" transform="translate(452 372) scale(20)" fill="#ffffff"/>
+    <use href="#star" transform="translate(70 396) scale(12)" fill="#bff6ff"/>
+    <circle cx="372" cy="150" r="4" fill="#ffffff" opacity="0.8"/>
+    <circle cx="150" cy="450" r="3" fill="#ffffff" opacity="0.7"/>
+    <circle cx="48" cy="250" r="3" fill="#ffffff" opacity="0.6"/>
+
+    <!-- anel (parte de tras) -->
+    <g transform="rotate(-24 256 256)">
+      <ellipse cx="256" cy="256" rx="204" ry="52" fill="none" stroke="url(#ring)" stroke-width="22" opacity="0.55"/>
+    </g>
+
+    <!-- planeta -->
+    <circle cx="256" cy="256" r="124" fill="url(#planet)"/>
+    <ellipse cx="214" cy="204" rx="46" ry="26" fill="#ffffff" opacity="0.18" transform="rotate(-32 214 204)"/>
+
+    <!-- anel (parte da frente) -->
+    <g transform="rotate(-24 256 256)">
+      <ellipse cx="256" cy="256" rx="204" ry="52" fill="none" stroke="url(#ring)" stroke-width="22" clip-path="url(#front)"/>
+    </g>
+  </g>
+</svg>

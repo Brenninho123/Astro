@@ -1,0 +1,88 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Bare-metal x86 kernel: proves the OS itself still compiles and links.
+  kernel:
+    name: Kernel (x86 bare metal)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-multilib grub-common
+
+      - name: Build kernel
+        run: make CROSS= kernel
+
+      - name: Verify Multiboot header
+        run: grub-file --is-x86-multiboot build/astro.elf
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: astro-kernel
+          path: build/astro.elf
+          if-no-files-found: error
+
+  # Windows simulator: Astro running as a normal program inside Windows.
+  # It never replaces or touches the host system.
+  simulator:
+    name: Simulator (Windows .exe)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: >-
+            make
+            mingw-w64-x86_64-gcc
+
+      - name: Build simulator
+        run: make sim
+
+      - name: Check the executable
+        run: ls -l build/sim/astro-sim.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: astro-sim-windows
+          path: build/sim/astro-sim.exe
+          if-no-files-found: error
+
+  # Publishes both artifacts as a GitHub release when a version tag (v*) is pushed.
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [kernel, simulator]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/astro-sim.exe
+            dist/astro.elf
+          generate_release_notes: true
